@@ -1,0 +1,72 @@
+.tag {
+  margin: 100px 126px;
+  position: relative;
+
+  .line {
+    padding: 0 30px;
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    border-radius: 2px;
+    line-height: 50px;
+    min-height: 50px;
+    position: relative;
+    z-index: 100;
+  }
+
+  .tag-info {
+    width: 70px;
+    height: 20px;
+    font-size: 14px;
+    padding: 0 0 0 10px;
+    background: rgba(40, 40, 40, 0.7);
+    color: rgba(255, 255, 255, 1);
+    border: 1px solid rgba(255, 255, 255, 1);
+    border-radius: 4px;
+    position: absolute;
+    z-index: 101;
+  }
+
+  .tag-info:hover {
+    z-index: 1000;
+  }
+
+  ::selection {
+    background: rgba(60, 60, 60, 0.4);
+    // height: 32px;
+  }
+
+  .color-red {
+    background: red;
+  }
+
+  .button {
+    width: 74px;
+    height: 36px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    line-height: 36px;
+    margin: 20px auto;
+    cursor: pointer;
+
+    .add {
+      margin: 0 12px;
+    }
+  }
+
+  .button:hover {
+    border: 1px solid #1890ff;
+  }
+
+  .svg-line {
+    width: 100%;
+    height: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    polyline {
+      fill: white;
+      stroke: rgba(255, 0, 0, 1);
+      stroke-width: 2;
+    }
+  }
+}
