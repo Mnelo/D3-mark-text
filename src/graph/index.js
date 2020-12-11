@@ -4,49 +4,55 @@ import "./style.less";
 
 class Graph extends Component {
   state = {
-    nodes: [
-      { x: 400, y: 480 },
-      { x: 500, y: 540 },
-      { x: 600, y: 640 },
-      { x: 600, y: 740 },
-    ],
+    des: [], // 描述
     lines: [],
     texts: [
       {
-        word:
-          "1大苏打撒大撒大撒大打赏大撒大撒大撒大苏打撒大撒大撒大打赏大撒大撒大撒大苏打撒大撒",
+        word: "我脚踏着大地，我头顶着太阳，我装作这世界，唯我独在....",
         line: 0,
       },
-      { word: "第二行内容：123456789", line: 1 },
-      { word: "第3行内容：123456789", line: 2 },
-      { word: "第4行内容：123456789", line: 3 },
+      {
+        word:
+          "乒乒乓乓....屋子最中间一辆被改装过的老版兰瑟车底时不时飘出这么几声金属碰撞的噪音。",
+        line: 1,
+      },
+      {
+        word:
+          "静默中的她突然说道，不等文柯反应，便已经取了钥匙俏皮的溜到了门口。",
+        line: 2,
+      },
+      {
+        word:
+          "云压得很低，仿佛打一声喷嚏立时就会大雨倾盆，不过一会，前奏还是迫不及待的来了，顷刻撩",
+        line: 3,
+      },
     ],
     tags: [],
   };
 
   componentDidMount() {
-    const { nodes, lines, texts, tags } = this.state;
+    const { lines, texts, tags, des } = this.state;
 
-    this.drwaNode(nodes, lines, texts, tags);
+    this.drwaNode(lines, texts, tags, des);
 
     window.addEventListener("mouseup", this.mouseUp);
   }
 
   componentDidUpdate(preProps, preStates) {
     if (preStates.lines !== this.state.lines) {
-      const { nodes, lines, texts, tags } = this.state;
+      const { lines, texts, tags, des } = this.state;
 
       d3.select("#svgGraph").remove();
 
-      this.drwaNode(nodes, lines, texts, tags);
+      this.drwaNode(lines, texts, tags, des);
     }
 
     if (preStates.tags !== this.state.tags) {
-      const { nodes, lines, texts, tags } = this.state;
+      const { lines, texts, tags, des } = this.state;
 
       d3.select("#svgGraph").remove();
 
-      this.drwaNode(nodes, lines, texts, tags);
+      this.drwaNode(lines, texts, tags, des);
     }
   }
 
@@ -109,7 +115,7 @@ class Graph extends Component {
       beforeWord = this.getWordWidth(beforeSelected);
     }
 
-    let { tags } = this.state;
+    let { tags, des } = this.state;
 
     if (selection.anchorOffset <= selection.focusOffset) {
       tags = [
@@ -122,6 +128,8 @@ class Graph extends Component {
           endIndex: selection.focusOffset,
         },
       ];
+
+      des = [...des, { beforeWord, tagWidth, lineIndex }];
     } else {
       tags = [
         ...tags,
@@ -133,10 +141,13 @@ class Graph extends Component {
           endIndex: selection.anchorOffset,
         },
       ];
+
+      des = [...des, { beforeWord, tagWidth, lineIndex }];
     }
 
     this.setState({
       tags,
+      des,
     });
   };
 
@@ -398,14 +409,20 @@ class Graph extends Component {
     return beforeWord;
   };
 
-  drwaNode = (nodes, lines, texts, tags) => {
+  // 画图
+  drwaNode = (lines, texts, tags, des) => {
     let line = "";
+    let startX = ""; // 拖拽起点X坐标
+    let startY = ""; // 拖拽起点Y坐标
     let addLine = "";
 
     const started = (event, d) => {
+      startX = Math.floor(event.x);
+      startY = Math.floor(event.y);
+
       addLine = {
-        startX: event.subject.x,
-        startY: event.subject.y,
+        startX: event.subject.beforeWord + event.subject.tagWidth / 2 + 20,
+        startY: 54 + parseInt(event.subject.lineIndex) * 40,
       };
 
       line = svg
@@ -416,29 +433,30 @@ class Graph extends Component {
     };
 
     const dragged = (event, d) => {
-      const startX = event.subject.x;
-      const startY = event.subject.y;
-
-      const endX = Math.floor(event.x);
-      const endY = Math.floor(event.y);
+      // +2的误差用于结束位置的节点获取,与连线区分开，不然ended里的event一直是拖拽的path
+      const endX = Math.floor(event.x) + 2;
+      const endY = Math.floor(event.y) + 2;
 
       const p = d3.path();
 
       p.moveTo(startX, startY);
       p.lineTo(endX, endY);
 
-      line.attr("d", p.toString());
+      line.attr("d", p);
     };
 
     const ended = (event, d) => {
       let { lines } = this.state;
 
-      if (event.sourceEvent.target.tagName === "circle") {
-        addLine.endX = event.sourceEvent.target.getAttribute("cx");
-        addLine.endY = event.sourceEvent.target.getAttribute("cy");
+      if (event.sourceEvent.target.tagName === "rect") {
+        addLine.endX =
+          parseInt(event.sourceEvent.target.getAttribute("x")) +
+          parseInt(event.sourceEvent.target.getAttribute("width")) / 2;
+
+        addLine.endY =
+          parseInt(event.sourceEvent.target.getAttribute("y")) + 10;
 
         lines = [...lines, addLine];
-
         this.setState({
           lines,
         });
@@ -454,26 +472,30 @@ class Graph extends Component {
       .attr("width", 800)
       .attr("height", 800);
 
+    // 框选后上面的文字
     svg
-      .selectAll("circle")
-      .data(nodes)
+      .selectAll(".desRect")
+      .data(des)
       .enter()
-      .append("circle")
-      .style("stroke", "gray")
-      .style("fill", "black")
-      .attr("r", 10)
-      .attr("cx", (nodes) => {
-        return nodes.x;
+      .append("rect")
+      .attr("width", (d) => {
+        return d.tagWidth;
       })
-      .attr("cy", (nodes) => {
-        return nodes.y;
+      .attr("height", "18px")
+      .attr("fill", "rgba(208,40,44,1")
+      .attr("x", (d) => {
+        return d.beforeWord + 20;
+      })
+      .attr("y", (d) => {
+        return 44 + parseInt(d.lineIndex) * 40;
       })
       .call(
         d3.drag().on("start", started).on("drag", dragged).on("end", ended)
       );
 
+    // 框选的文字
     svg
-      .selectAll("rect")
+      .selectAll(".rect")
       .data(tags)
       .enter()
       .append("rect")
@@ -490,19 +512,7 @@ class Graph extends Component {
       .attr("fill", "rgba(208,240,244,1");
 
     svg
-      .selectAll("line")
-      .data(lines)
-      .enter()
-      .append("path")
-      .style("stroke", "gray")
-      .style("fill", "none")
-      .style("stroke-width", "1.75px")
-      .attr("d", (line) => {
-        return `M ${line.startX} ${line.startY} L ${line.endX} ${line.endY}`;
-      });
-
-    svg
-      .selectAll("text")
+      .selectAll(".text")
       .data(texts)
       .enter()
       .append("text")
@@ -518,6 +528,18 @@ class Graph extends Component {
       })
       .style("font-size", "14px")
       .style("fill", "#000");
+
+    svg
+      .selectAll(".line")
+      .data(lines)
+      .enter()
+      .append("path")
+      .style("stroke", "gray")
+      .style("fill", "none")
+      .style("stroke-width", "1.75px")
+      .attr("d", (line) => {
+        return `M ${line.startX} ${line.startY} L ${line.endX} ${line.endY}`;
+      });
   };
 
   render() {
