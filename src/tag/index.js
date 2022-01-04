@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import "./animate.less";
 import "./style.less";
 
 const word =
@@ -173,6 +174,8 @@ class Tag extends Component {
         <div className="button" onClick={this.deleteLine}>
           <span className="add">删除线</span>
         </div>
+
+        <div className="test animate__animated animate__fadeInLeft"></div>0
       </div>
     );
   }

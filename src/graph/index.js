@@ -8,7 +8,8 @@ class Graph extends Component {
     lines: [],
     texts: [
       {
-        word: "我脚踏着大地，我头顶着太阳，我装作这世界，唯我独在....",
+        word:
+          "312312312321我脚踏着大地，我头顶着太阳，我装作这世界，唯我独在....",
         line: 0,
       },
       {
@@ -31,7 +32,22 @@ class Graph extends Component {
   };
 
   componentDidMount() {
-    const { lines, texts, tags, des } = this.state;
+    let { lines, texts, tags, des } = this.state;
+
+    for (let i = 4; i < 10000; i++) {
+      texts = [
+        ...texts,
+        {
+          word:
+            "云压得很低，仿佛打一声喷嚏立时就会大雨倾盆，不过一会，前奏还是迫不及待的来了，顷刻撩",
+          line: i,
+        },
+      ];
+    }
+
+    this.setState({
+      texts,
+    });
 
     this.drwaNode(lines, texts, tags, des);
 
@@ -434,7 +450,7 @@ class Graph extends Component {
 
     const dragged = (event, d) => {
       // +2的误差用于结束位置的节点获取,与连线区分开，不然ended里的event一直是拖拽的path
-      const endX = Math.floor(event.x) + 2;
+      const endX = Math.floor(event.x) + 8;
       const endY = Math.floor(event.y) + 2;
 
       const p = d3.path();
@@ -470,7 +486,7 @@ class Graph extends Component {
       .append("svg")
       .attr("id", "svgGraph")
       .attr("width", 800)
-      .attr("height", 800);
+      .attr("height", texts.length * 40 + 88);
 
     // 框选后上面的文字
     svg
